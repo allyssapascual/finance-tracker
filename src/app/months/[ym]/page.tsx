@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { signOut } from "@/app/actions";
 import { MonthNav } from "@/components/month-nav";
@@ -151,6 +152,12 @@ export default async function MonthPage({ params }: PageProps) {
             <MonthNav ym={ym} />
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href={`/?year=${parsed.year}`}
+              className="inline-flex h-10 items-center border border-foreground/15 bg-surface px-3 text-sm font-medium text-foreground hover:border-foreground/30"
+            >
+              Overview
+            </Link>
             <MonthSetupButton
               year={parsed.year}
               month={parsed.month}

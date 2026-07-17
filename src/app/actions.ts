@@ -347,12 +347,21 @@ export async function createRecurringTemplate(
   const month_day =
     frequency === "monthly" ? Number(formData.get("month_day")) : null;
 
-  if (frequency === "weekly" && (!Number.isInteger(weekday) || weekday < 0 || weekday > 6)) {
+  if (
+    frequency === "weekly" &&
+    (weekday === null ||
+      !Number.isInteger(weekday) ||
+      weekday < 0 ||
+      weekday > 6)
+  ) {
     return { error: "Pick a weekday for weekly templates." };
   }
   if (
     frequency === "monthly" &&
-    (!Number.isInteger(month_day) || month_day < 1 || month_day > 28)
+    (month_day === null ||
+      !Number.isInteger(month_day) ||
+      month_day < 1 ||
+      month_day > 28)
   ) {
     return { error: "Pick a day of month (1–28) for monthly templates." };
   }
@@ -409,12 +418,21 @@ export async function updateRecurringTemplate(
   const month_day =
     frequency === "monthly" ? Number(formData.get("month_day")) : null;
 
-  if (frequency === "weekly" && (!Number.isInteger(weekday) || weekday < 0 || weekday > 6)) {
+  if (
+    frequency === "weekly" &&
+    (weekday === null ||
+      !Number.isInteger(weekday) ||
+      weekday < 0 ||
+      weekday > 6)
+  ) {
     return { error: "Pick a weekday for weekly templates." };
   }
   if (
     frequency === "monthly" &&
-    (!Number.isInteger(month_day) || month_day < 1 || month_day > 28)
+    (month_day === null ||
+      !Number.isInteger(month_day) ||
+      month_day < 1 ||
+      month_day > 28)
   ) {
     return { error: "Pick a day of month (1–28) for monthly templates." };
   }

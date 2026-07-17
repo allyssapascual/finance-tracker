@@ -39,7 +39,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — you’ll be redirected to login, then to the current month.
+Open [http://localhost:3000](http://localhost:3000) — you’ll be redirected to login, then to the year overview dashboard.
 
 ## Vercel env vars
 
@@ -60,5 +60,4 @@ Redeploy after saving. Without these, auth and data calls will fail.
 - Month setup: income + spending budgets per grouping
 - Cash summary + expenses-by-grouping (wants/needs/goals)
 - Totals: spending by grouping (budget / actual / % used); savings and investments with create/edit/delete (budget, actual, current value)
-
-Charts and year overview are planned for later.
+- Year overview dashboard (home): month links, 4 charts (income / expenses / savings / investments), year table with savings & investment account columns
