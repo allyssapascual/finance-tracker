@@ -14,7 +14,7 @@ export default async function SavingsGoalsPage() {
   const parsed = parseYearMonth(ym);
   if (!parsed) {
     return (
-      <div className="mx-auto max-w-5xl px-6 py-16">
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
         <p className="text-red-700">Could not determine the current month.</p>
       </div>
     );
@@ -35,7 +35,7 @@ export default async function SavingsGoalsPage() {
 
   if (accountsResult.error) {
     return (
-      <div className="mx-auto max-w-5xl px-6 py-16">
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
         <p className="text-red-700">
           Could not load savings: {accountsResult.error.message}
         </p>
@@ -57,13 +57,13 @@ export default async function SavingsGoalsPage() {
 
   return (
     <div className="relative min-h-full flex-1 bg-white">
-      <div className="relative z-10 mx-auto max-w-5xl px-6 py-10 sm:px-8">
-        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-foreground/10 pb-6">
-          <div>
+      <div className="page-shell page-shell-narrow relative z-10">
+        <header className="flex flex-col gap-4 border-b border-foreground/10 pb-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          <div className="min-w-0 flex-1">
             <p className="font-mono text-xs tracking-[0.2em] text-accent uppercase">
               Finance Tracker
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               Savings goals
             </h1>
             <p className="mt-2 text-sm text-muted">
@@ -84,7 +84,7 @@ export default async function SavingsGoalsPage() {
               </Link>
             </div>
           </div>
-          <form action={signOut}>
+          <form action={signOut} className="shrink-0">
             <button
               type="submit"
               className="text-sm text-muted hover:text-foreground"

@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   description: "Track income, spending, and balances in one place.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

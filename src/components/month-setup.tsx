@@ -87,7 +87,7 @@ export function MonthSetupForm({
           Used in Totals for budget vs actual %. Overall expense budget is the sum
           of these.
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {SPENDING_GROUPINGS.map((g) => (
             <MoneyField
               key={g}
@@ -156,7 +156,7 @@ export function MonthSetupPanel({
         className="absolute inset-0 bg-foreground/20"
         onClick={onClose}
       />
-      <aside className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-foreground/10 bg-panel shadow-xl">
+      <aside className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-foreground/10 bg-panel pb-[env(safe-area-inset-bottom)] shadow-xl">
         <div className="flex items-center justify-between border-b border-foreground/10 px-5 py-4">
           <h2 className="text-lg font-semibold tracking-tight">Setup month</h2>
           <button

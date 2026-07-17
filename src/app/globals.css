@@ -28,4 +28,57 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, sans-serif;
+  overflow-x: clip;
+}
+
+/* Shared page content width + gutters */
+.page-shell {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1.5rem 1rem 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .page-shell {
+    padding-inline: 1.5rem;
+    padding-block: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-shell {
+    padding-inline: 2rem;
+  }
+}
+
+.page-shell-narrow {
+  max-width: 64rem;
+}
+
+/* Sticky first column for wide tables */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll table {
+  min-width: 100%;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: inherit;
+}
+
+.sticky-col::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }

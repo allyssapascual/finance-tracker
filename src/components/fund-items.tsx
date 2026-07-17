@@ -89,7 +89,7 @@ function FundForm({
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <MoneyInput name="budget" label="Budget" defaultValue={initial?.budget} />
         <MoneyInput name="actual" label="Actual" defaultValue={initial?.actual} />
         <MoneyInput
@@ -199,7 +199,7 @@ export function FundItemsTable({
       ) : null}
 
       {items.length > 0 ? (
-        <div className="overflow-x-auto border border-foreground/10 bg-white/70">
+        <div className="table-scroll border border-foreground/10 bg-white/70">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-foreground/10 bg-accent-soft/40 text-xs tracking-wide text-muted uppercase">
               <tr>

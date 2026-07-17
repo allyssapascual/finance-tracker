@@ -16,13 +16,13 @@ export function YearOverviewTable({ overview }: { overview: YearOverview }) {
   const investCols = Math.max(investmentAccounts.length, 1);
 
   return (
-    <div className="overflow-x-auto border border-foreground/10">
-      <table className="min-w-full border-collapse text-sm">
+    <div className="table-scroll border border-foreground/10">
+      <table className="min-w-[40rem] border-collapse text-xs sm:min-w-full sm:text-sm">
         <thead>
           <tr className="bg-accent-soft/80 text-left">
             <th
               rowSpan={2}
-              className="border-b border-r border-foreground/10 px-3 py-2 font-semibold"
+              className="sticky-col border-b border-r border-foreground/10 bg-accent-soft/80 px-2 py-2 font-semibold sm:px-3"
             >
               Month
             </th>
@@ -94,7 +94,7 @@ export function YearOverviewTable({ overview }: { overview: YearOverview }) {
               key={row.ym}
               className="border-b border-foreground/5 odd:bg-white even:bg-accent-soft/35 last:border-0"
             >
-              <td className="border-r border-foreground/5 px-3 py-2.5 font-medium">
+              <td className="sticky-col border-r border-foreground/5 bg-inherit px-2 py-2.5 font-medium odd:bg-white even:bg-accent-soft/35 sm:px-3">
                 <Link
                   href={`/months/${row.ym}`}
                   className="text-accent hover:text-accent-hover hover:underline"
@@ -145,7 +145,9 @@ export function YearOverviewTable({ overview }: { overview: YearOverview }) {
             </tr>
           ))}
           <tr className="bg-accent-soft/60 font-semibold">
-            <td className="border-r border-foreground/10 px-3 py-2.5">Total</td>
+            <td className="sticky-col border-r border-foreground/10 bg-accent-soft/60 px-2 py-2.5 sm:px-3">
+              Total
+            </td>
             <td className="border-r border-foreground/10 px-3 py-2.5 text-right tabular-nums">
               {moneyCell(totals.income)}
             </td>

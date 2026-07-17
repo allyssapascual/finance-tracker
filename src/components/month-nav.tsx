@@ -25,7 +25,7 @@ export function MonthNav({ ym, basePath = "/months" }: MonthNavProps) {
     <div className="mt-4 flex flex-wrap items-center gap-2">
       <Link
         href={`${basePath}/${prev}`}
-        className="inline-flex h-10 w-10 items-center justify-center border border-foreground/15 bg-surface text-foreground hover:border-foreground/30"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-foreground/15 bg-surface text-foreground hover:border-foreground/30"
         aria-label={`Previous month, ${monthLabel(prev)}`}
         title={monthLabel(prev)}
       >
@@ -45,12 +45,12 @@ export function MonthNav({ ym, basePath = "/months" }: MonthNavProps) {
             router.push(`${basePath}/${value}`);
           }
         }}
-        className="h-10 border border-foreground/15 bg-surface px-3 text-sm text-foreground outline-none focus:border-accent"
+        className="h-10 min-w-0 max-w-[11rem] flex-1 border border-foreground/15 bg-surface px-2 text-sm text-foreground outline-none focus:border-accent sm:max-w-none sm:flex-none sm:px-3"
       />
 
       <Link
         href={`${basePath}/${next}`}
-        className="inline-flex h-10 w-10 items-center justify-center border border-foreground/15 bg-surface text-foreground hover:border-foreground/30"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-foreground/15 bg-surface text-foreground hover:border-foreground/30"
         aria-label={`Next month, ${monthLabel(next)}`}
         title={monthLabel(next)}
       >

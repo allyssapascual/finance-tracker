@@ -59,14 +59,16 @@ export function CashSummaryTable({
         Income remaining = income minus expense, savings, and investment (budget
         column uses budgets; actual column uses actuals).
       </p>
-      <div className="overflow-x-auto border border-foreground/10 bg-white/70">
+      <div className="table-scroll border border-foreground/10 bg-white/70">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-foreground/10 bg-accent-soft/40 text-xs tracking-wide text-muted uppercase">
             <tr>
-              <th className="px-4 py-3 font-medium">Category</th>
-              <th className="px-4 py-3 font-medium text-right">Budget</th>
-              <th className="px-4 py-3 font-medium text-right">Actual</th>
-              <th className="px-4 py-3 font-medium text-right">Variance</th>
+              <th className="px-2 py-3 font-medium sm:px-4">Category</th>
+              <th className="px-2 py-3 font-medium text-right sm:px-4">Budget</th>
+              <th className="px-2 py-3 font-medium text-right sm:px-4">Actual</th>
+              <th className="px-2 py-3 font-medium text-right sm:px-4">
+                Variance
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -81,23 +83,23 @@ export function CashSummaryTable({
                   isRemaining ? "bg-accent-soft/50 font-medium even:bg-accent-soft/50" : ""
                 }`}
               >
-                  <td className="px-4 py-3 font-medium">{row.label}</td>
+                  <td className="px-2 py-3 font-medium sm:px-4">{row.label}</td>
                   <td
-                    className={`px-4 py-3 text-right tabular-nums ${
+                    className={`px-2 py-3 text-right tabular-nums sm:px-4 ${
                       negativeBudget ? "text-red-700" : ""
                     }`}
                   >
                     {dashOrMoney(row.budget)}
                   </td>
                   <td
-                    className={`px-4 py-3 text-right tabular-nums ${
+                    className={`px-2 py-3 text-right tabular-nums sm:px-4 ${
                       negativeActual ? "text-red-700" : ""
                     }`}
                   >
                     {formatGbp(row.actual)}
                   </td>
                   <td
-                    className={`px-4 py-3 text-right tabular-nums ${
+                    className={`px-2 py-3 text-right tabular-nums sm:px-4 ${
                       row.variance !== null && row.variance < 0 ? "text-red-700" : ""
                     }`}
                   >
@@ -131,14 +133,16 @@ export function SpendingTotalsTable({
         Actual is from your spending entries. Budget comes from Setup month. % is
         how much of the budget you have used.
       </p>
-      <div className="overflow-x-auto border border-foreground/10 bg-white/70">
-        <table className="min-w-full text-left text-sm">
+      <div className="table-scroll border border-foreground/10 bg-white/70">
+        <table className="min-w-[28rem] text-left text-sm sm:min-w-full">
           <thead className="border-b border-foreground/10 bg-accent-soft/40 text-xs tracking-wide text-muted uppercase">
             <tr>
-              <th className="px-4 py-3 font-medium">Grouping</th>
-              <th className="px-4 py-3 font-medium text-right">Budget</th>
-              <th className="px-4 py-3 font-medium text-right">Actual</th>
-              <th className="px-4 py-3 font-medium text-right">% used</th>
+              <th className="sticky-col bg-accent-soft/40 px-2 py-3 font-medium sm:px-4">
+                Grouping
+              </th>
+              <th className="px-2 py-3 font-medium text-right sm:px-4">Budget</th>
+              <th className="px-2 py-3 font-medium text-right sm:px-4">Actual</th>
+              <th className="px-2 py-3 font-medium text-right sm:px-4">% used</th>
             </tr>
           </thead>
           <tbody>
@@ -147,15 +151,17 @@ export function SpendingTotalsTable({
                 key={row.key}
                 className="border-b border-foreground/5 last:border-0 odd:bg-white even:bg-accent-soft/35"
               >
-                <td className="px-4 py-3 font-medium">{row.label}</td>
-                <td className="px-4 py-3 text-right tabular-nums">
+                <td className="sticky-col bg-inherit px-2 py-3 font-medium odd:bg-white even:bg-accent-soft/35 sm:px-4">
+                  {row.label}
+                </td>
+                <td className="px-2 py-3 text-right tabular-nums sm:px-4">
                   {formatGbp(row.budget)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">
+                <td className="px-2 py-3 text-right tabular-nums sm:px-4">
                   {formatGbp(row.actual)}
                 </td>
                 <td
-                  className={`px-4 py-3 text-right tabular-nums ${
+                  className={`px-2 py-3 text-right tabular-nums sm:px-4 ${
                     row.percentUsed !== null && row.percentUsed > 100
                       ? "text-red-700"
                       : ""
@@ -228,17 +234,19 @@ export function GroupingSummaryTable({
           No spending yet — totals appear here once you add entries.
         </p>
       ) : null}
-      <div className="overflow-x-auto border border-foreground/10 bg-white/70">
-        <table className="min-w-full text-left text-sm">
+      <div className="table-scroll border border-foreground/10 bg-white/70">
+        <table className="min-w-[28rem] text-left text-sm sm:min-w-full">
           <thead className="border-b border-foreground/10 bg-accent-soft/40 text-xs tracking-wide text-muted uppercase">
             <tr>
-              <th className="px-4 py-3 font-medium">Grouping</th>
+              <th className="sticky-col bg-accent-soft/40 px-2 py-3 font-medium sm:px-4">
+                Grouping
+              </th>
               {SPENDING_TYPES.map((t) => (
-                <th key={t} className="px-4 py-3 font-medium text-right">
+                <th key={t} className="px-2 py-3 font-medium text-right sm:px-4">
                   {TYPE_LABELS[t]}
                 </th>
               ))}
-              <th className="px-4 py-3 font-medium text-right">Total</th>
+              <th className="px-2 py-3 font-medium text-right sm:px-4">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -247,25 +255,35 @@ export function GroupingSummaryTable({
                 key={g}
                 className="border-b border-foreground/5 odd:bg-white even:bg-accent-soft/35"
               >
-                <td className="px-4 py-3 font-medium">{GROUPING_LABELS[g]}</td>
+                <td className="sticky-col bg-inherit px-2 py-3 font-medium odd:bg-white even:bg-accent-soft/35 sm:px-4">
+                  {GROUPING_LABELS[g]}
+                </td>
                 {SPENDING_TYPES.map((t) => (
-                  <td key={t} className="px-4 py-3 text-right tabular-nums">
+                  <td
+                    key={t}
+                    className="px-2 py-3 text-right tabular-nums sm:px-4"
+                  >
                     {formatGbp(summary.cells[g][t])}
                   </td>
                 ))}
-                <td className="px-4 py-3 text-right tabular-nums font-medium">
+                <td className="px-2 py-3 text-right font-medium tabular-nums sm:px-4">
                   {formatGbp(summary.rowTotals[g])}
                 </td>
               </tr>
             ))}
             <tr className="bg-accent-soft/20 font-medium">
-              <td className="px-4 py-3">Total</td>
+              <td className="sticky-col bg-accent-soft/20 px-2 py-3 sm:px-4">
+                Total
+              </td>
               {SPENDING_TYPES.map((t) => (
-                <td key={t} className="px-4 py-3 text-right tabular-nums">
+                <td
+                  key={t}
+                  className="px-2 py-3 text-right tabular-nums sm:px-4"
+                >
                   {formatGbp(summary.colTotals[t])}
                 </td>
               ))}
-              <td className="px-4 py-3 text-right tabular-nums">
+              <td className="px-2 py-3 text-right tabular-nums sm:px-4">
                 {formatGbp(summary.grandTotal)}
               </td>
             </tr>

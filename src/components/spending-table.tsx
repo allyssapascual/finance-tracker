@@ -177,7 +177,7 @@ export function SpendingTable({ transactions, defaultDate }: SpendingTableProps)
       </div>
 
       {transactions.length === 0 ? (
-        <div className="border border-dashed border-foreground/20 px-6 py-14 text-center">
+        <div className="border border-dashed border-foreground/20 px-4 py-14 text-center sm:px-6">
           <p className="text-foreground">No spending this month yet.</p>
           <p className="mt-1 text-sm text-muted">Add your first entry to get started.</p>
           <button
@@ -189,74 +189,128 @@ export function SpendingTable({ transactions, defaultDate }: SpendingTableProps)
           </button>
         </div>
       ) : (
-        <div className="overflow-x-auto border border-foreground/10 bg-white/70">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-foreground/10 bg-accent-soft/40 text-xs tracking-wide">
-              <tr>
-                {SORT_COLUMNS.map((col) => (
-                  <SortHeader
-                    key={col.key}
-                    label={col.label}
-                    sortKey={col.key}
-                    activeKey={sortKey}
-                    dir={sortDir}
-                    align={col.align}
-                    onSort={handleSort}
-                  />
-                ))}
-                <th className="px-4 py-3 text-right font-medium text-muted uppercase tracking-wide">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((tx) => (
-                <tr
-                  key={tx.id}
-                  className="border-b border-foreground/5 odd:bg-white even:bg-accent-soft/35 last:border-0"
-                >
-                  <td className="whitespace-nowrap px-4 py-3 tabular-nums">
-                    {tx.date}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span>{tx.description}</span>
-                    {tx.sister_split ? (
-                      <span className="ml-2 text-xs font-medium text-accent">
-                        Split
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3">{GROUPING_LABELS[tx.grouping]}</td>
-                  <td className="px-4 py-3">{TYPE_LABELS[tx.type]}</td>
-                  <td className="px-4 py-3 text-right tabular-nums font-medium">
+        <>
+          <ul className="space-y-3 md:hidden">
+            {sorted.map((tx) => (
+              <li
+                key={tx.id}
+                className="border border-foreground/10 bg-white px-3 py-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium break-words">
+                      {tx.description}
+                      {tx.sister_split ? (
+                        <span className="ml-2 text-xs font-medium text-accent">
+                          Split
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 text-xs text-muted tabular-nums">
+                      {tx.date} · {GROUPING_LABELS[tx.grouping]} ·{" "}
+                      {TYPE_LABELS[tx.type]}
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-semibold tabular-nums">
                     {formatGbp(Number(tx.amount))}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-3">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(tx)}
-                        className="text-sm text-accent hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <form action={deleteTransaction}>
-                        <input type="hidden" name="id" value={tx.id} />
-                        <input type="hidden" name="date" value={tx.date} />
-                        <button
-                          type="submit"
-                          className="text-sm text-red-700 hover:underline"
-                        >
-                          Delete
-                        </button>
-                      </form>
-                    </div>
-                  </td>
+                  </p>
+                </div>
+                <div className="mt-3 flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(tx)}
+                    className="text-sm text-accent hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <form action={deleteTransaction}>
+                    <input type="hidden" name="id" value={tx.id} />
+                    <input type="hidden" name="date" value={tx.date} />
+                    <button
+                      type="submit"
+                      className="text-sm text-red-700 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="table-scroll hidden border border-foreground/10 bg-white/70 md:block">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-foreground/10 bg-accent-soft/40 text-xs tracking-wide">
+                <tr>
+                  {SORT_COLUMNS.map((col) => (
+                    <SortHeader
+                      key={col.key}
+                      label={col.label}
+                      sortKey={col.key}
+                      activeKey={sortKey}
+                      dir={sortDir}
+                      align={col.align}
+                      onSort={handleSort}
+                    />
+                  ))}
+                  <th className="px-3 py-3 text-right font-medium text-muted uppercase tracking-wide sm:px-4">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {sorted.map((tx) => (
+                  <tr
+                    key={tx.id}
+                    className="border-b border-foreground/5 odd:bg-white even:bg-accent-soft/35 last:border-0"
+                  >
+                    <td className="whitespace-nowrap px-3 py-3 tabular-nums sm:px-4">
+                      {tx.date}
+                    </td>
+                    <td className="max-w-[12rem] px-3 py-3 break-words sm:max-w-none sm:px-4">
+                      <span>{tx.description}</span>
+                      {tx.sister_split ? (
+                        <span className="ml-2 text-xs font-medium text-accent">
+                          Split
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-3 sm:px-4">
+                      {GROUPING_LABELS[tx.grouping]}
+                    </td>
+                    <td className="px-3 py-3 sm:px-4">
+                      {TYPE_LABELS[tx.type]}
+                    </td>
+                    <td className="px-3 py-3 text-right font-medium tabular-nums sm:px-4">
+                      {formatGbp(Number(tx.amount))}
+                    </td>
+                    <td className="px-3 py-3 sm:px-4">
+                      <div className="flex justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(tx)}
+                          className="text-sm text-accent hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <form action={deleteTransaction}>
+                          <input type="hidden" name="id" value={tx.id} />
+                          <input type="hidden" name="date" value={tx.date} />
+                          <button
+                            type="submit"
+                            className="text-sm text-red-700 hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <SpendingPanel
