@@ -13,6 +13,7 @@ Personal monthly spending tracker (Next.js + Supabase).
    - [`supabase/migrations/003_totals_items.sql`](supabase/migrations/003_totals_items.sql)
    - [`supabase/migrations/004_global_fund_accounts.sql`](supabase/migrations/004_global_fund_accounts.sql)
    - [`supabase/migrations/005_remove_investment_grouping.sql`](supabase/migrations/005_remove_investment_grouping.sql)
+   - [`supabase/migrations/006_recurring_templates.sql`](supabase/migrations/006_recurring_templates.sql)
 3. **Authentication → Providers**: enable Email
 4. **Authentication → Providers → Email**: disable “Confirm email” if you want instant login for a personal app
 5. **Authentication → Users**: create your user (email + password)

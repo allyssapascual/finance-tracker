@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
+  datesForRecurringInMonth,
   formatYearMonth,
   isSpendingGrouping,
   isSpendingType,
+  toRecurringTemplate,
 } from "@/lib/finance/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -318,4 +320,233 @@ export async function deleteFundItem(formData: FormData): Promise<void> {
   if (Number.isInteger(year) && Number.isInteger(month)) {
     revalidatePath(`/months/${formatYearMonth(year, month)}`);
   }
+}
+
+export async function createRecurringTemplate(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const description = String(formData.get("description") ?? "").trim();
+  const grouping = String(formData.get("grouping") ?? "");
+  const type = String(formData.get("type") ?? "");
+  const frequency = String(formData.get("frequency") ?? "");
+  const amount = parseAmount(formData.get("amount"));
+
+  if (!description || !amount) {
+    return { error: "Description and a positive amount are required." };
+  }
+  if (!isSpendingGrouping(grouping) || !isSpendingType(type)) {
+    return { error: "Invalid grouping or type." };
+  }
+  if (frequency !== "weekly" && frequency !== "monthly") {
+    return { error: "Frequency must be weekly or monthly." };
+  }
+
+  const weekday =
+    frequency === "weekly" ? Number(formData.get("weekday")) : null;
+  const month_day =
+    frequency === "monthly" ? Number(formData.get("month_day")) : null;
+
+  if (frequency === "weekly" && (!Number.isInteger(weekday) || weekday < 0 || weekday > 6)) {
+    return { error: "Pick a weekday for weekly templates." };
+  }
+  if (
+    frequency === "monthly" &&
+    (!Number.isInteger(month_day) || month_day < 1 || month_day > 28)
+  ) {
+    return { error: "Pick a day of month (1–28) for monthly templates." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("recurring_templates").insert({
+    description,
+    amount,
+    grouping,
+    type,
+    frequency,
+    weekday,
+    month_day,
+    active: true,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+  if (Number.isInteger(year) && Number.isInteger(month)) {
+    revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  }
+  return { success: true };
+}
+
+export async function updateRecurringTemplate(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const id = String(formData.get("id") ?? "");
+  const description = String(formData.get("description") ?? "").trim();
+  const grouping = String(formData.get("grouping") ?? "");
+  const type = String(formData.get("type") ?? "");
+  const frequency = String(formData.get("frequency") ?? "");
+  const amount = parseAmount(formData.get("amount"));
+  const active = formData.get("active") === "on" || formData.get("active") === "true";
+
+  if (!id) return { error: "Missing id." };
+  if (!description || !amount) {
+    return { error: "Description and a positive amount are required." };
+  }
+  if (!isSpendingGrouping(grouping) || !isSpendingType(type)) {
+    return { error: "Invalid grouping or type." };
+  }
+  if (frequency !== "weekly" && frequency !== "monthly") {
+    return { error: "Frequency must be weekly or monthly." };
+  }
+
+  const weekday =
+    frequency === "weekly" ? Number(formData.get("weekday")) : null;
+  const month_day =
+    frequency === "monthly" ? Number(formData.get("month_day")) : null;
+
+  if (frequency === "weekly" && (!Number.isInteger(weekday) || weekday < 0 || weekday > 6)) {
+    return { error: "Pick a weekday for weekly templates." };
+  }
+  if (
+    frequency === "monthly" &&
+    (!Number.isInteger(month_day) || month_day < 1 || month_day > 28)
+  ) {
+    return { error: "Pick a day of month (1–28) for monthly templates." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("recurring_templates")
+    .update({
+      description,
+      amount,
+      grouping,
+      type,
+      frequency,
+      weekday,
+      month_day,
+      active,
+    })
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+  if (Number.isInteger(year) && Number.isInteger(month)) {
+    revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  }
+  return { success: true };
+}
+
+export async function deleteRecurringTemplate(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+  if (!id) return;
+
+  const supabase = await createClient();
+  await supabase.from("recurring_templates").delete().eq("id", id);
+
+  if (Number.isInteger(year) && Number.isInteger(month)) {
+    revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  }
+}
+
+export async function applyRecurringsToMonth(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return { error: "Invalid year or month." };
+  }
+
+  const selectedIds = formData
+    .getAll("template_id")
+    .map((v) => String(v))
+    .filter(Boolean);
+
+  if (selectedIds.length === 0) {
+    return { error: "Select at least one recurring template to add." };
+  }
+
+  const supabase = await createClient();
+  const { data: templates, error: loadError } = await supabase
+    .from("recurring_templates")
+    .select("*")
+    .in("id", selectedIds)
+    .eq("active", true);
+
+  if (loadError) {
+    return { error: loadError.message };
+  }
+
+  if (!templates || templates.length === 0) {
+    return { error: "No active templates matched your selection." };
+  }
+
+  const boundsStart = `${formatYearMonth(year, month)}-01`;
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const boundsEnd = `${formatYearMonth(year, month)}-${String(lastDay).padStart(2, "0")}`;
+
+  const { data: existing } = await supabase
+    .from("transactions")
+    .select("date, description, amount, grouping")
+    .gte("date", boundsStart)
+    .lte("date", boundsEnd);
+
+  const existingKeys = new Set(
+    (existing ?? []).map(
+      (t) => `${t.date}|${t.description}|${Number(t.amount)}|${t.grouping}`,
+    ),
+  );
+
+  const toInsert: {
+    date: string;
+    description: string;
+    amount: number;
+    grouping: string;
+    type: string;
+  }[] = [];
+
+  for (const row of templates) {
+    const template = toRecurringTemplate(row);
+    const dates = datesForRecurringInMonth(template, year, month);
+    for (const date of dates) {
+      const key = `${date}|${template.description}|${template.amount}|${template.grouping}`;
+      if (existingKeys.has(key)) continue;
+      existingKeys.add(key);
+      toInsert.push({
+        date,
+        description: template.description,
+        amount: template.amount,
+        grouping: template.grouping,
+        type: template.type,
+      });
+    }
+  }
+
+  if (toInsert.length === 0) {
+    return {
+      error: "Nothing new to add — selected recurrings are already in this month.",
+    };
+  }
+
+  const { error: insertError } = await supabase.from("transactions").insert(toInsert);
+  if (insertError) {
+    return { error: insertError.message };
+  }
+
+  revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  return { success: true };
 }

@@ -36,6 +36,77 @@ export type Transaction = {
   created_at: string;
 };
 
+export const RECURRING_FREQUENCIES = ["weekly", "monthly"] as const;
+export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];
+
+export const WEEKDAY_LABELS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+export type RecurringTemplate = {
+  id: string;
+  description: string;
+  amount: number;
+  grouping: SpendingGrouping;
+  type: SpendingType;
+  frequency: RecurringFrequency;
+  weekday: number | null;
+  month_day: number | null;
+  active: boolean;
+  created_at: string;
+};
+
+export function toRecurringTemplate(row: Record<string, unknown>): RecurringTemplate {
+  return {
+    id: String(row.id),
+    description: String(row.description ?? ""),
+    amount: Number(row.amount ?? 0),
+    grouping: row.grouping as SpendingGrouping,
+    type: row.type as SpendingType,
+    frequency: row.frequency as RecurringFrequency,
+    weekday: row.weekday === null || row.weekday === undefined ? null : Number(row.weekday),
+    month_day:
+      row.month_day === null || row.month_day === undefined
+        ? null
+        : Number(row.month_day),
+    active: Boolean(row.active ?? true),
+    created_at: String(row.created_at ?? ""),
+  };
+}
+
+/** Dates (YYYY-MM-DD) this template should create in a given calendar month */
+export function datesForRecurringInMonth(
+  template: Pick<RecurringTemplate, "frequency" | "weekday" | "month_day">,
+  year: number,
+  month: number,
+): string[] {
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  if (template.frequency === "monthly") {
+    const day = Math.min(template.month_day ?? 1, lastDay);
+    return [`${formatYearMonth(year, month)}-${String(day).padStart(2, "0")}`];
+  }
+
+  // weekly: every matching weekday in the month
+  const weekday = template.weekday ?? 1;
+  const dates: string[] = [];
+  for (let day = 1; day <= lastDay; day++) {
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (date.getUTCDay() === weekday) {
+      dates.push(
+        `${formatYearMonth(year, month)}-${String(day).padStart(2, "0")}`,
+      );
+    }
+  }
+  return dates;
+}
+
 /** Month-level income + overall expense budget (expense often = sum of grouping budgets) */
 export type MonthPlan = {
   id: string;

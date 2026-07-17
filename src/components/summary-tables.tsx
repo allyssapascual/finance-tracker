@@ -75,12 +75,12 @@ export function CashSummaryTable({
               const negativeBudget = isRemaining && (row.budget ?? 0) < 0;
               const negativeActual = isRemaining && row.actual < 0;
               return (
-                <tr
-                  key={row.key}
-                  className={`border-b border-foreground/5 last:border-0 ${
-                    isRemaining ? "bg-accent-soft/30 font-medium" : ""
-                  }`}
-                >
+              <tr
+                key={row.key}
+                className={`border-b border-foreground/5 last:border-0 odd:bg-white even:bg-accent-soft/35 ${
+                  isRemaining ? "bg-accent-soft/50 font-medium even:bg-accent-soft/50" : ""
+                }`}
+              >
                   <td className="px-4 py-3 font-medium">{row.label}</td>
                   <td
                     className={`px-4 py-3 text-right tabular-nums ${
@@ -143,7 +143,10 @@ export function SpendingTotalsTable({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.key} className="border-b border-foreground/5 last:border-0">
+              <tr
+                key={row.key}
+                className="border-b border-foreground/5 last:border-0 odd:bg-white even:bg-accent-soft/35"
+              >
                 <td className="px-4 py-3 font-medium">{row.label}</td>
                 <td className="px-4 py-3 text-right tabular-nums">
                   {formatGbp(row.budget)}
@@ -240,7 +243,10 @@ export function GroupingSummaryTable({
           </thead>
           <tbody>
             {SPENDING_GROUPINGS.map((g) => (
-              <tr key={g} className="border-b border-foreground/5">
+              <tr
+                key={g}
+                className="border-b border-foreground/5 odd:bg-white even:bg-accent-soft/35"
+              >
                 <td className="px-4 py-3 font-medium">{GROUPING_LABELS[g]}</td>
                 {SPENDING_TYPES.map((t) => (
                   <td key={t} className="px-4 py-3 text-right tabular-nums">

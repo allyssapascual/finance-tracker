@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { signOut } from "@/app/actions";
 import { MonthNav } from "@/components/month-nav";
 import { MonthSetupButton } from "@/components/month-setup";
+import { ShoppingBudgetBanner } from "@/components/budget-banners";
+import { RecurringSection } from "@/components/recurring";
 import { SpendingTable } from "@/components/spending-table";
 import {
   CashSummaryTable,
@@ -15,6 +17,7 @@ import {
   parseYearMonth,
   toGroupingBudgets,
   toMonthPlan,
+  toRecurringTemplate,
   type SpendingGrouping,
   type SpendingType,
   type Transaction,
@@ -43,14 +46,15 @@ export default async function MonthPage({ params }: PageProps) {
     savingsValuesResult,
     investAccountsResult,
     investValuesResult,
+    recurringResult,
   ] = await Promise.all([
     supabase
       .from("transactions")
       .select("id, date, description, grouping, type, amount, created_at")
       .gte("date", bounds.start)
       .lte("date", bounds.end)
-      .order("date", { ascending: false })
-      .order("created_at", { ascending: false }),
+      .order("date", { ascending: true })
+      .order("created_at", { ascending: true }),
     supabase
       .from("month_plans")
       .select("*")
@@ -80,6 +84,10 @@ export default async function MonthPage({ params }: PageProps) {
       .select("account_id, budget, actual, current_value")
       .eq("year", parsed.year)
       .eq("month", parsed.month),
+    supabase
+      .from("recurring_templates")
+      .select("*")
+      .order("created_at", { ascending: true }),
   ]);
 
   if (txResult.error) {
@@ -110,13 +118,15 @@ export default async function MonthPage({ params }: PageProps) {
     investAccountsResult.data ?? [],
     investValuesResult.data ?? [],
   );
+  const recurringTemplates = (recurringResult.data ?? []).map(toRecurringTemplate);
 
   const loadWarning =
     budgetsResult.error?.message ||
     savingsAccountsResult.error?.message ||
     savingsValuesResult.error?.message ||
     investAccountsResult.error?.message ||
-    investValuesResult.error?.message;
+    investValuesResult.error?.message ||
+    recurringResult.error?.message;
 
   const defaultDate = (() => {
     const today = new Date();
@@ -160,15 +170,19 @@ export default async function MonthPage({ params }: PageProps) {
 
         {loadWarning ? (
           <p className="mt-4 text-sm text-amber-800">
-            Some totals data could not load ({loadWarning}). Run migrations{" "}
-            <code className="font-mono">003_totals_items.sql</code> and{" "}
-            <code className="font-mono">004_global_fund_accounts.sql</code> in
-            Supabase if you have not yet.
+            Some totals data could not load ({loadWarning}). Run the latest
+            migrations in Supabase (through{" "}
+            <code className="font-mono">006_recurring_templates.sql</code>) if
+            you have not yet.
           </p>
         ) : null}
 
         <section className="mt-8">
           <h2 className="mb-4 text-lg font-semibold tracking-tight">Summary</h2>
+          <ShoppingBudgetBanner
+            transactions={transactions}
+            groupingBudgets={groupingBudgets}
+          />
           <div className="grid gap-8 lg:grid-cols-2">
             <CashSummaryTable
               plan={plan}
@@ -190,6 +204,14 @@ export default async function MonthPage({ params }: PageProps) {
             groupingBudgets={groupingBudgets}
             savings={savings}
             investments={investments}
+          />
+        </section>
+
+        <section className="mt-10">
+          <RecurringSection
+            year={parsed.year}
+            month={parsed.month}
+            templates={recurringTemplates}
           />
         </section>
 

@@ -203,7 +203,10 @@ export function FundItemsTable({
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-foreground/5">
+                <tr
+                  key={item.id}
+                  className="border-b border-foreground/5 odd:bg-white even:bg-accent-soft/35"
+                >
                   {editingId === item.id ? (
                     <td colSpan={5} className="px-4 py-3">
                       <FundForm
