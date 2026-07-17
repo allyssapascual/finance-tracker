@@ -42,7 +42,7 @@ export const SISTER_CARDS = ["lloyds", "amex"] as const;
 export type SisterCard = (typeof SISTER_CARDS)[number];
 
 export const SISTER_CARD_LABELS: Record<SisterCard, string> = {
-  lloyds: "Lloyds credit card",
+  lloyds: "Lloyds",
   amex: "Amex",
 };
 

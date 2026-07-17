@@ -265,6 +265,10 @@ export default async function MonthPage({ params }: PageProps) {
 
         <section className="mt-10">
           <h2 className="mb-4 text-lg font-semibold tracking-tight">Spending</h2>
+          <ShoppingBudgetBanner
+            transactions={transactions}
+            groupingBudgets={groupingBudgets}
+          />
           <SpendingTable transactions={transactions} defaultDate={defaultDate} />
         </section>
       </div>

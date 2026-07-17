@@ -102,12 +102,9 @@ export function SisterSpendingsTable({
                 </h3>
                 <p className="mt-1 text-xs text-muted">
                   {sisterCardDeadlineLabel(card)}
-                  {cardRows.length > 0 ? (
-                    <>
-                      {" "}
-                      · {formatGbp(cardTotal)} this month
-                    </>
-                  ) : null}
+                </p>
+                <p className="mt-2 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  {formatGbp(cardTotal)}
                 </p>
               </div>
               <CardPaidToggle
