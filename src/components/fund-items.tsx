@@ -109,7 +109,7 @@ function FundForm({
         <button
           type="submit"
           disabled={pending}
-          className="h-10 flex-1 bg-accent text-sm font-medium text-white hover:bg-[#146349] disabled:opacity-60"
+          className="h-10 flex-1 bg-accent text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
         >
           {pending ? "Saving…" : initial ? "Save" : "Add"}
         </button>
@@ -166,7 +166,7 @@ export function FundItemsTable({
             setEditingId(null);
             setAdding(true);
           }}
-          className="h-9 bg-accent px-3 text-sm font-medium text-white hover:bg-[#146349]"
+          className="h-9 bg-accent px-3 text-sm font-medium text-white hover:bg-accent-hover"
         >
           Add {kind === "savings" ? "saving" : "investment"}
         </button>

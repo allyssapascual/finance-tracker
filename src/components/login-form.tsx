@@ -39,7 +39,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="h-11 bg-accent text-sm font-medium text-white transition-colors hover:bg-[#146349] disabled:opacity-60"
+        className="h-11 bg-accent text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-60"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

@@ -132,7 +132,7 @@ export function SpendingForm({
         <button
           type="submit"
           disabled={pending}
-          className="h-11 flex-1 bg-accent text-sm font-medium text-white hover:bg-[#146349] disabled:opacity-60"
+          className="h-11 flex-1 bg-accent text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
         >
           {pending
             ? "Saving…"
@@ -179,7 +179,7 @@ export function SpendingPanel({
         className="absolute inset-0 bg-foreground/20"
         onClick={onClose}
       />
-      <aside className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-foreground/10 bg-[#f7faf8] shadow-xl">
+      <aside className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-foreground/10 bg-panel shadow-xl">
         <div className="flex items-center justify-between border-b border-foreground/10 px-5 py-4">
           <h2 className="text-lg font-semibold tracking-tight">
             {mode === "create" ? "Add spending" : "Edit spending"}

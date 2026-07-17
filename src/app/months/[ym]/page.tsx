@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { signOut } from "@/app/actions";
+import { MonthNav } from "@/components/month-nav";
 import { MonthSetupButton } from "@/components/month-setup";
 import { SpendingTable } from "@/components/spending-table";
 import {
@@ -13,7 +13,6 @@ import {
   monthLabel,
   mergeFundAccounts,
   parseYearMonth,
-  shiftYearMonth,
   toGroupingBudgets,
   toMonthPlan,
   type SpendingGrouping,
@@ -119,8 +118,6 @@ export default async function MonthPage({ params }: PageProps) {
     investAccountsResult.error?.message ||
     investValuesResult.error?.message;
 
-  const prev = shiftYearMonth(ym, -1);
-  const next = shiftYearMonth(ym, 1);
   const defaultDate = (() => {
     const today = new Date();
     const todayYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
@@ -131,11 +128,7 @@ export default async function MonthPage({ params }: PageProps) {
   })();
 
   return (
-    <div className="relative min-h-full flex-1">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(165deg,#f3f6f4_0%,#e7efe9_55%,#dce8e1_100%)]"
-      />
+    <div className="relative min-h-full flex-1 bg-white">
       <div className="relative z-10 mx-auto max-w-5xl px-6 py-10 sm:px-8">
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-foreground/10 pb-6">
           <div>
@@ -145,15 +138,7 @@ export default async function MonthPage({ params }: PageProps) {
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               {monthLabel(ym)}
             </h1>
-            <nav className="mt-3 flex items-center gap-3 text-sm">
-              <Link href={`/months/${prev}`} className="text-muted hover:text-foreground">
-                ← {monthLabel(prev)}
-              </Link>
-              <span className="text-foreground/20">|</span>
-              <Link href={`/months/${next}`} className="text-muted hover:text-foreground">
-                {monthLabel(next)} →
-              </Link>
-            </nav>
+            <MonthNav ym={ym} />
           </div>
           <div className="flex items-center gap-3">
             <MonthSetupButton

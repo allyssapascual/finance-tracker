@@ -55,7 +55,7 @@ export function SpendingTable({ transactions, defaultDate }: SpendingTableProps)
         <button
           type="button"
           onClick={openCreate}
-          className="h-10 bg-accent px-4 text-sm font-medium text-white hover:bg-[#146349]"
+          className="h-10 bg-accent px-4 text-sm font-medium text-white hover:bg-accent-hover"
         >
           Add spending
         </button>
@@ -68,7 +68,7 @@ export function SpendingTable({ transactions, defaultDate }: SpendingTableProps)
           <button
             type="button"
             onClick={openCreate}
-            className="mt-5 h-10 bg-accent px-4 text-sm font-medium text-white hover:bg-[#146349]"
+            className="mt-5 h-10 bg-accent px-4 text-sm font-medium text-white hover:bg-accent-hover"
           >
             Add spending
           </button>
