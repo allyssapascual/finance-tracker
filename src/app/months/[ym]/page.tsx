@@ -12,6 +12,7 @@ import {
   TotalsSection,
 } from "@/components/summary-tables";
 import {
+  isSisterCard,
   monthDateBounds,
   monthLabel,
   mergeFundAccounts,
@@ -19,6 +20,7 @@ import {
   toGroupingBudgets,
   toMonthPlan,
   toRecurringTemplate,
+  type SisterSplit,
   type SpendingGrouping,
   type SpendingType,
   type Transaction,
@@ -102,11 +104,37 @@ export default async function MonthPage({ params }: PageProps) {
     );
   }
 
+  const txIds = (txResult.data ?? []).map((row) => row.id);
+  const sisterByTx = new Map<string, SisterSplit>();
+  let sisterLoadWarning: string | undefined;
+
+  if (txIds.length > 0) {
+    const sisterResult = await supabase
+      .from("sister_spendings")
+      .select("id, transaction_id, amount, card, year, month")
+      .in("transaction_id", txIds);
+    if (sisterResult.error) {
+      sisterLoadWarning = sisterResult.error.message;
+    } else {
+      for (const row of sisterResult.data ?? []) {
+        if (!isSisterCard(row.card)) continue;
+        sisterByTx.set(row.transaction_id, {
+          id: row.id,
+          amount: Number(row.amount),
+          card: row.card,
+          year: Number(row.year),
+          month: Number(row.month),
+        });
+      }
+    }
+  }
+
   const transactions = (txResult.data ?? []).map((row) => ({
     ...row,
     amount: Number(row.amount),
     grouping: row.grouping as SpendingGrouping,
     type: row.type as SpendingType,
+    sister_split: sisterByTx.get(row.id) ?? null,
   })) as Transaction[];
 
   const plan = planResult.data ? toMonthPlan(planResult.data) : null;
@@ -127,7 +155,8 @@ export default async function MonthPage({ params }: PageProps) {
     savingsValuesResult.error?.message ||
     investAccountsResult.error?.message ||
     investValuesResult.error?.message ||
-    recurringResult.error?.message;
+    recurringResult.error?.message ||
+    sisterLoadWarning;
 
   const defaultDate = (() => {
     const today = new Date();
@@ -163,6 +192,12 @@ export default async function MonthPage({ params }: PageProps) {
               className="inline-flex h-10 items-center border border-foreground/15 bg-surface px-3 text-sm font-medium text-foreground hover:border-foreground/30"
             >
               Savings goals
+            </Link>
+            <Link
+              href={`/sister/${ym}`}
+              className="inline-flex h-10 items-center border border-foreground/15 bg-surface px-3 text-sm font-medium text-foreground hover:border-foreground/30"
+            >
+              Sister spendings
             </Link>
             <MonthSetupButton
               year={parsed.year}

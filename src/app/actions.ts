@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 import {
   datesForRecurringInMonth,
   formatYearMonth,
+  isSisterCard,
   isSpendingGrouping,
   isSpendingType,
+  parseYearMonth,
   toRecurringTemplate,
 } from "@/lib/finance/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -18,10 +20,27 @@ function monthPathFromDate(date: string): string {
   return `/months/${formatYearMonth(Number(year), Number(month))}`;
 }
 
+function revalidateSpendingPaths(date: string, sisterYm?: string) {
+  revalidatePath(monthPathFromDate(date));
+  revalidatePath("/sister");
+  if (sisterYm && parseYearMonth(sisterYm)) {
+    revalidatePath(`/sister/${sisterYm}`);
+  }
+  revalidatePath("/");
+}
+
 function parseAmount(raw: FormDataEntryValue | null): number | null {
   if (typeof raw !== "string" || raw.trim() === "") return null;
   const amount = Number(raw);
   if (!Number.isFinite(amount) || amount <= 0) return null;
+  return Math.round(amount * 100) / 100;
+}
+
+/** Split shares may be 0; full amount still must be positive. */
+function parseShareAmount(raw: FormDataEntryValue | null): number | null {
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const amount = Number(raw);
+  if (!Number.isFinite(amount) || amount < 0) return null;
   return Math.round(amount * 100) / 100;
 }
 
@@ -69,6 +88,8 @@ export async function createTransaction(
   const grouping = String(formData.get("grouping") ?? "");
   const type = String(formData.get("type") ?? "");
   const amount = parseAmount(formData.get("amount"));
+  const isSplit = formData.get("split_with_sister") === "on";
+  const cardRaw = String(formData.get("sister_card") ?? "");
 
   if (!date || !description || !amount) {
     return { error: "Date, description, and a positive amount are required." };
@@ -76,21 +97,70 @@ export async function createTransaction(
   if (!isSpendingGrouping(grouping) || !isSpendingType(type)) {
     return { error: "Invalid grouping or type." };
   }
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("transactions").insert({
-    date,
-    description,
-    grouping,
-    type,
-    amount,
-  });
-
-  if (error) {
-    return { error: error.message };
+  if (isSplit && !isSisterCard(cardRaw)) {
+    return { error: "Pick Lloyds or Amex for your sister’s share." };
   }
 
-  revalidatePath(monthPathFromDate(date));
+  let mine = amount;
+  let sister = 0;
+  let sisterYear = 0;
+  let sisterMonth = 0;
+  let sisterYm: string | undefined;
+
+  if (isSplit) {
+    const myAmount = parseShareAmount(formData.get("my_amount"));
+    const sisterAmount = parseShareAmount(formData.get("sister_amount"));
+    if (myAmount === null || sisterAmount === null) {
+      return { error: "Enter both your share and her share (0 is allowed)." };
+    }
+    const sum = Math.round((myAmount + sisterAmount) * 100) / 100;
+    if (Math.abs(sum - amount) > 0.001) {
+      return { error: "Your share and hers must add up to the full amount." };
+    }
+    const billingYm = String(formData.get("sister_month") ?? "");
+    const billing = parseYearMonth(billingYm);
+    if (!billing) {
+      return { error: "Pick a billing month for your sister’s share." };
+    }
+    mine = myAmount;
+    sister = sisterAmount;
+    sisterYear = billing.year;
+    sisterMonth = billing.month;
+    sisterYm = billingYm;
+  }
+
+  const supabase = await createClient();
+  const { data: tx, error } = await supabase
+    .from("transactions")
+    .insert({
+      date,
+      description,
+      grouping,
+      type,
+      amount: mine,
+    })
+    .select("id")
+    .single();
+
+  if (error || !tx) {
+    return { error: error?.message ?? "Could not save spending." };
+  }
+
+  if (isSplit) {
+    const { error: sisterError } = await supabase.from("sister_spendings").insert({
+      transaction_id: tx.id,
+      amount: sister,
+      card: cardRaw,
+      year: sisterYear,
+      month: sisterMonth,
+    });
+    if (sisterError) {
+      await supabase.from("transactions").delete().eq("id", tx.id);
+      return { error: sisterError.message };
+    }
+  }
+
+  revalidateSpendingPaths(date, sisterYm);
   return { success: true };
 }
 
@@ -104,6 +174,8 @@ export async function updateTransaction(
   const grouping = String(formData.get("grouping") ?? "");
   const type = String(formData.get("type") ?? "");
   const amount = parseAmount(formData.get("amount"));
+  const isSplit = formData.get("split_with_sister") === "on";
+  const cardRaw = String(formData.get("sister_card") ?? "");
 
   if (!id || !date || !description || !amount) {
     return { error: "All fields are required." };
@@ -111,18 +183,67 @@ export async function updateTransaction(
   if (!isSpendingGrouping(grouping) || !isSpendingType(type)) {
     return { error: "Invalid grouping or type." };
   }
+  if (isSplit && !isSisterCard(cardRaw)) {
+    return { error: "Pick Lloyds or Amex for your sister’s share." };
+  }
+
+  let mine = amount;
+  let sister = 0;
+  let sisterYear = 0;
+  let sisterMonth = 0;
+  let sisterYm: string | undefined;
+
+  if (isSplit) {
+    const myAmount = parseShareAmount(formData.get("my_amount"));
+    const sisterAmount = parseShareAmount(formData.get("sister_amount"));
+    if (myAmount === null || sisterAmount === null) {
+      return { error: "Enter both your share and her share (0 is allowed)." };
+    }
+    const sum = Math.round((myAmount + sisterAmount) * 100) / 100;
+    if (Math.abs(sum - amount) > 0.001) {
+      return { error: "Your share and hers must add up to the full amount." };
+    }
+    const billingYm = String(formData.get("sister_month") ?? "");
+    const billing = parseYearMonth(billingYm);
+    if (!billing) {
+      return { error: "Pick a billing month for your sister’s share." };
+    }
+    mine = myAmount;
+    sister = sisterAmount;
+    sisterYear = billing.year;
+    sisterMonth = billing.month;
+    sisterYm = billingYm;
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("transactions")
-    .update({ date, description, grouping, type, amount })
+    .update({ date, description, grouping, type, amount: mine })
     .eq("id", id);
 
   if (error) {
     return { error: error.message };
   }
 
-  revalidatePath(monthPathFromDate(date));
+  if (isSplit) {
+    const { error: sisterError } = await supabase.from("sister_spendings").upsert(
+      {
+        transaction_id: id,
+        amount: sister,
+        card: cardRaw,
+        year: sisterYear,
+        month: sisterMonth,
+      },
+      { onConflict: "transaction_id" },
+    );
+    if (sisterError) {
+      return { error: sisterError.message };
+    }
+  } else {
+    await supabase.from("sister_spendings").delete().eq("transaction_id", id);
+  }
+
+  revalidateSpendingPaths(date, sisterYm);
   return { success: true };
 }
 
@@ -135,8 +256,44 @@ export async function deleteTransaction(formData: FormData): Promise<void> {
   await supabase.from("transactions").delete().eq("id", id);
 
   if (date) {
-    revalidatePath(monthPathFromDate(date));
+    revalidateSpendingPaths(date);
+  } else {
+    revalidatePath("/sister");
   }
+}
+
+export async function setSisterCardBillingPaid(
+  formData: FormData,
+): Promise<void> {
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+  const card = String(formData.get("card") ?? "");
+  const paid = formData.get("paid") === "true";
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    month < 1 ||
+    month > 12 ||
+    !isSisterCard(card)
+  ) {
+    return;
+  }
+
+  const supabase = await createClient();
+  await supabase.from("sister_card_billings").upsert(
+    {
+      year,
+      month,
+      card,
+      paid,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "year,month,card" },
+  );
+
+  revalidatePath("/sister");
+  revalidatePath(`/sister/${formatYearMonth(year, month)}`);
 }
 
 export async function upsertMonthPlan(

@@ -15,6 +15,10 @@ Personal monthly spending tracker (Next.js + Supabase).
    - [`supabase/migrations/005_remove_investment_grouping.sql`](supabase/migrations/005_remove_investment_grouping.sql)
    - [`supabase/migrations/006_recurring_templates.sql`](supabase/migrations/006_recurring_templates.sql)
    - [`supabase/migrations/007_savings_target.sql`](supabase/migrations/007_savings_target.sql)
+   - [`supabase/migrations/008_sister_spendings.sql`](supabase/migrations/008_sister_spendings.sql)
+   - [`supabase/migrations/009_sister_billing_month.sql`](supabase/migrations/009_sister_billing_month.sql)
+   - [`supabase/migrations/010_sister_card_billings.sql`](supabase/migrations/010_sister_card_billings.sql)
+   - [`supabase/migrations/011_allow_zero_split_amounts.sql`](supabase/migrations/011_allow_zero_split_amounts.sql)
 3. **Authentication → Providers**: enable Email
 4. **Authentication → Providers → Email**: disable “Confirm email” if you want instant login for a personal app
 5. **Authentication → Users**: create your user (email + password)
@@ -63,3 +67,4 @@ Redeploy after saving. Without these, auth and data calls will fail.
 - Totals: spending by grouping (budget / actual / % used); savings and investments with create/edit/delete (budget, actual, current value)
 - Year overview dashboard (home): month links, 4 charts (income / expenses / savings / investments), year table with savings & investment account columns
 - Savings goals page (`/savings`): target per savings account vs this month’s current value, with progress bars
+- Split spendings: your share on the purchase date; her share on a chosen billing month (defaults to current month); Lloyds due 10th / Amex due 27th on `/sister`; mark each card bill paid/unpaid per month

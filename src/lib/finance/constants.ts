@@ -34,7 +34,66 @@ export type Transaction = {
   type: SpendingType;
   amount: number;
   created_at: string;
+  /** Present when this spending is split with sister */
+  sister_split?: SisterSplit | null;
 };
+
+export const SISTER_CARDS = ["lloyds", "amex"] as const;
+export type SisterCard = (typeof SISTER_CARDS)[number];
+
+export const SISTER_CARD_LABELS: Record<SisterCard, string> = {
+  lloyds: "Lloyds credit card",
+  amex: "Amex",
+};
+
+/** Payment deadline day of month for sister's card */
+export const SISTER_CARD_DEADLINE_DAY: Record<SisterCard, number> = {
+  lloyds: 10,
+  amex: 27,
+};
+
+export type SisterSplit = {
+  id: string;
+  amount: number;
+  card: SisterCard;
+  /** Billing month for her card payment (not the purchase date) */
+  year: number;
+  month: number;
+};
+
+export function isSisterCard(value: string): value is SisterCard {
+  return (SISTER_CARDS as readonly string[]).includes(value);
+}
+
+/** Split total into two halves in pence (remainder goes to sister). */
+export function splitAmountInHalf(total: number): {
+  mine: number;
+  sister: number;
+} {
+  const cents = Math.round(total * 100);
+  const mineCents = Math.floor(cents / 2);
+  const sisterCents = cents - mineCents;
+  return { mine: mineCents / 100, sister: sisterCents / 100 };
+}
+
+export function sisterCardDeadlineLabel(card: SisterCard): string {
+  const day = SISTER_CARD_DEADLINE_DAY[card];
+  return `Due every ${day}${ordinalSuffix(day)} of the month`;
+}
+
+function ordinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) return "th";
+  switch (day % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
+}
 
 export const RECURRING_FREQUENCIES = ["weekly", "monthly"] as const;
 export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];

@@ -218,7 +218,14 @@ export function SpendingTable({ transactions, defaultDate }: SpendingTableProps)
                   <td className="whitespace-nowrap px-4 py-3 tabular-nums">
                     {tx.date}
                   </td>
-                  <td className="px-4 py-3">{tx.description}</td>
+                  <td className="px-4 py-3">
+                    <span>{tx.description}</span>
+                    {tx.sister_split ? (
+                      <span className="ml-2 text-xs font-medium text-accent">
+                        Split
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3">{GROUPING_LABELS[tx.grouping]}</td>
                   <td className="px-4 py-3">{TYPE_LABELS[tx.type]}</td>
                   <td className="px-4 py-3 text-right tabular-nums font-medium">
