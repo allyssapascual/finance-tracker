@@ -7,7 +7,12 @@ Personal monthly spending tracker (Next.js + Supabase).
 ### 1. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Open **SQL Editor** and run [`supabase/migrations/001_init.sql`](supabase/migrations/001_init.sql)
+2. Open **SQL Editor** and run in order:
+   - [`supabase/migrations/001_init.sql`](supabase/migrations/001_init.sql)
+   - [`supabase/migrations/002_current_values.sql`](supabase/migrations/002_current_values.sql)
+   - [`supabase/migrations/003_totals_items.sql`](supabase/migrations/003_totals_items.sql)
+   - [`supabase/migrations/004_global_fund_accounts.sql`](supabase/migrations/004_global_fund_accounts.sql)
+   - [`supabase/migrations/005_remove_investment_grouping.sql`](supabase/migrations/005_remove_investment_grouping.sql)
 3. **Authentication → Providers**: enable Email
 4. **Authentication → Providers → Email**: disable “Confirm email” if you want instant login for a personal app
 5. **Authentication → Users**: create your user (email + password)
@@ -46,10 +51,13 @@ In the Vercel project: **Settings → Environment Variables**, add for Productio
 
 Redeploy after saving. Without these, auth and data calls will fail.
 
-## Phase 1 features
+## Phase 1–2 features
 
 - Email/password login gate (single-tenant DB, no `user_id`)
 - Monthly spending list with prev/next month
 - Add / edit / delete spending (date, description, grouping, type, amount)
+- Month setup: income + spending budgets per grouping
+- Cash summary + expenses-by-grouping (wants/needs/goals)
+- Totals: spending by grouping (budget / actual / % used); savings and investments with create/edit/delete (budget, actual, current value)
 
-Summary tables, charts, and month setup are planned for later phases (`month_plans` table already exists).
+Charts and year overview are planned for later.

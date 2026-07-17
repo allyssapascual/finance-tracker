@@ -23,6 +23,14 @@ function parseAmount(raw: FormDataEntryValue | null): number | null {
   return Math.round(amount * 100) / 100;
 }
 
+/** Allows 0 for budget/setup fields */
+function parseMoney(raw: FormDataEntryValue | null): number {
+  if (typeof raw !== "string" || raw.trim() === "") return 0;
+  const amount = Number(raw);
+  if (!Number.isFinite(amount) || amount < 0) return 0;
+  return Math.round(amount * 100) / 100;
+}
+
 export async function signIn(
   _prev: ActionResult | null,
   formData: FormData,
@@ -126,5 +134,188 @@ export async function deleteTransaction(formData: FormData): Promise<void> {
 
   if (date) {
     revalidatePath(monthPathFromDate(date));
+  }
+}
+
+export async function upsertMonthPlan(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return { error: "Invalid year or month." };
+  }
+
+  const income = parseMoney(formData.get("income"));
+  const groupings = [
+    "bills",
+    "transport",
+    "shopping",
+    "tithes",
+    "housing",
+  ] as const;
+
+  const groupingRows = groupings.map((grouping) => ({
+    year,
+    month,
+    grouping,
+    budget: parseMoney(formData.get(`budget_${grouping}`)),
+  }));
+
+  const expense_budget = groupingRows.reduce((sum, row) => sum + row.budget, 0);
+
+  const supabase = await createClient();
+
+  const { error: planError } = await supabase.from("month_plans").upsert(
+    {
+      year,
+      month,
+      income_budget: 0,
+      income_actual: income,
+      expense_budget,
+    },
+    { onConflict: "year,month" },
+  );
+
+  if (planError) {
+    return { error: planError.message };
+  }
+
+  const { error: budgetError } = await supabase
+    .from("month_grouping_budgets")
+    .upsert(groupingRows, { onConflict: "year,month,grouping" });
+
+  if (budgetError) {
+    return { error: budgetError.message };
+  }
+
+  revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  return { success: true };
+}
+
+function accountTable(kind: "savings" | "investment") {
+  return kind === "savings" ? "savings_accounts" : "investment_accounts";
+}
+
+function valuesTable(kind: "savings" | "investment") {
+  return kind === "savings" ? "savings_month_values" : "investment_month_values";
+}
+
+export async function createFundItem(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const kind = String(formData.get("kind") ?? "");
+  if (kind !== "savings" && kind !== "investment") {
+    return { error: "Invalid fund type." };
+  }
+
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+  const name = String(formData.get("name") ?? "").trim();
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return { error: "Invalid year or month." };
+  }
+  if (!name) {
+    return { error: "Name is required." };
+  }
+
+  const supabase = await createClient();
+  const { data: account, error: accountError } = await supabase
+    .from(accountTable(kind))
+    .insert({ name })
+    .select("id")
+    .single();
+
+  if (accountError || !account) {
+    return { error: accountError?.message ?? "Could not create account." };
+  }
+
+  const { error: valuesError } = await supabase.from(valuesTable(kind)).insert({
+    account_id: account.id,
+    year,
+    month,
+    budget: parseMoney(formData.get("budget")),
+    actual: parseMoney(formData.get("actual")),
+    current_value: parseMoney(formData.get("current_value")),
+  });
+
+  if (valuesError) {
+    return { error: valuesError.message };
+  }
+
+  revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  return { success: true };
+}
+
+export async function updateFundItem(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const kind = String(formData.get("kind") ?? "");
+  if (kind !== "savings" && kind !== "investment") {
+    return { error: "Invalid fund type." };
+  }
+
+  const id = String(formData.get("id") ?? "");
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+  const name = String(formData.get("name") ?? "").trim();
+
+  if (!id) return { error: "Missing id." };
+  if (!name) return { error: "Name is required." };
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return { error: "Invalid year or month." };
+  }
+
+  const supabase = await createClient();
+
+  const { error: nameError } = await supabase
+    .from(accountTable(kind))
+    .update({ name })
+    .eq("id", id);
+
+  if (nameError) {
+    return { error: nameError.message };
+  }
+
+  const { error: valuesError } = await supabase.from(valuesTable(kind)).upsert(
+    {
+      account_id: id,
+      year,
+      month,
+      budget: parseMoney(formData.get("budget")),
+      actual: parseMoney(formData.get("actual")),
+      current_value: parseMoney(formData.get("current_value")),
+    },
+    { onConflict: "account_id,year,month" },
+  );
+
+  if (valuesError) {
+    return { error: valuesError.message };
+  }
+
+  revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  return { success: true };
+}
+
+export async function deleteFundItem(formData: FormData): Promise<void> {
+  const kind = String(formData.get("kind") ?? "");
+  if (kind !== "savings" && kind !== "investment") return;
+
+  const id = String(formData.get("id") ?? "");
+  const year = Number(formData.get("year"));
+  const month = Number(formData.get("month"));
+  if (!id) return;
+
+  const supabase = await createClient();
+  // Deletes account and cascades all month values
+  await supabase.from(accountTable(kind)).delete().eq("id", id);
+
+  if (Number.isInteger(year) && Number.isInteger(month)) {
+    revalidatePath(`/months/${formatYearMonth(year, month)}`);
   }
 }

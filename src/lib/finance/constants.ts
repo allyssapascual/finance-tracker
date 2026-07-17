@@ -4,7 +4,6 @@ export const SPENDING_GROUPINGS = [
   "shopping",
   "tithes",
   "housing",
-  "investment",
 ] as const;
 
 export type SpendingGrouping = (typeof SPENDING_GROUPINGS)[number];
@@ -19,7 +18,6 @@ export const GROUPING_LABELS: Record<SpendingGrouping, string> = {
   shopping: "Shopping",
   tithes: "Tithes",
   housing: "Housing",
-  investment: "Investment",
 };
 
 export const TYPE_LABELS: Record<SpendingType, string> = {
@@ -38,6 +36,97 @@ export type Transaction = {
   created_at: string;
 };
 
+/** Month-level income + overall expense budget (expense often = sum of grouping budgets) */
+export type MonthPlan = {
+  id: string;
+  year: number;
+  month: number;
+  income: number;
+  expense_budget: number;
+};
+
+export const EMPTY_MONTH_PLAN: Omit<MonthPlan, "id" | "year" | "month"> = {
+  income: 0,
+  expense_budget: 0,
+};
+
+export type GroupingBudgetMap = Record<SpendingGrouping, number>;
+
+export const EMPTY_GROUPING_BUDGETS: GroupingBudgetMap = {
+  bills: 0,
+  transport: 0,
+  shopping: 0,
+  tithes: 0,
+  housing: 0,
+};
+
+export type FundItem = {
+  /** Account id (stable across months) */
+  id: string;
+  name: string;
+  budget: number;
+  actual: number;
+  current_value: number;
+  created_at: string;
+};
+
+export function mergeFundAccounts(
+  accounts: { id: string; name: string; created_at: string }[],
+  monthValues: {
+    account_id: string;
+    budget: number | string;
+    actual: number | string;
+    current_value: number | string;
+  }[],
+): FundItem[] {
+  const byAccount = new Map(
+    monthValues.map((v) => [
+      v.account_id,
+      {
+        budget: Number(v.budget ?? 0),
+        actual: Number(v.actual ?? 0),
+        current_value: Number(v.current_value ?? 0),
+      },
+    ]),
+  );
+
+  return accounts.map((account) => {
+    const values = byAccount.get(account.id);
+    return {
+      id: account.id,
+      name: account.name,
+      budget: values?.budget ?? 0,
+      actual: values?.actual ?? 0,
+      current_value: values?.current_value ?? 0,
+      created_at: account.created_at,
+    };
+  });
+}
+
+export function toMonthPlan(row: Record<string, unknown>): MonthPlan {
+  const num = (key: string) => Number(row[key] ?? 0);
+  const income = num("income_actual") || num("income_budget");
+  return {
+    id: String(row.id),
+    year: Number(row.year),
+    month: Number(row.month),
+    income,
+    expense_budget: num("expense_budget"),
+  };
+}
+
+export function toGroupingBudgets(
+  rows: { grouping: string; budget: number | string }[],
+): GroupingBudgetMap {
+  const map = { ...EMPTY_GROUPING_BUDGETS };
+  for (const row of rows) {
+    if ((SPENDING_GROUPINGS as readonly string[]).includes(row.grouping)) {
+      map[row.grouping as SpendingGrouping] = Number(row.budget ?? 0);
+    }
+  }
+  return map;
+}
+
 export function isSpendingGrouping(value: string): value is SpendingGrouping {
   return (SPENDING_GROUPINGS as readonly string[]).includes(value);
 }
@@ -51,6 +140,17 @@ export function formatGbp(amount: number): string {
     style: "currency",
     currency: "GBP",
   }).format(amount);
+}
+
+export function formatPercent(used: number): string {
+  if (!Number.isFinite(used)) return "—";
+  return `${Math.round(used * 10) / 10}%`;
+}
+
+/** actual / budget * 100; null if no budget */
+export function budgetUsedPercent(budget: number, actual: number): number | null {
+  if (budget <= 0) return null;
+  return (actual / budget) * 100;
 }
 
 export function parseYearMonth(ym: string): { year: number; month: number } | null {

@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { signOut } from "@/app/actions";
+import { MonthSetupButton } from "@/components/month-setup";
 import { SpendingTable } from "@/components/spending-table";
+import {
+  CashSummaryTable,
+  GroupingSummaryTable,
+  TotalsSection,
+} from "@/components/summary-tables";
 import {
   monthDateBounds,
   monthLabel,
+  mergeFundAccounts,
   parseYearMonth,
   shiftYearMonth,
+  toGroupingBudgets,
+  toMonthPlan,
   type SpendingGrouping,
   type SpendingType,
   type Transaction,
@@ -26,18 +35,58 @@ export default async function MonthPage({ params }: PageProps) {
   if (!bounds) notFound();
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("id, date, description, grouping, type, amount, created_at")
-    .gte("date", bounds.start)
-    .lte("date", bounds.end)
-    .order("date", { ascending: false })
-    .order("created_at", { ascending: false });
 
-  if (error) {
+  const [
+    txResult,
+    planResult,
+    budgetsResult,
+    savingsAccountsResult,
+    savingsValuesResult,
+    investAccountsResult,
+    investValuesResult,
+  ] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("id, date, description, grouping, type, amount, created_at")
+      .gte("date", bounds.start)
+      .lte("date", bounds.end)
+      .order("date", { ascending: false })
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("month_plans")
+      .select("*")
+      .eq("year", parsed.year)
+      .eq("month", parsed.month)
+      .maybeSingle(),
+    supabase
+      .from("month_grouping_budgets")
+      .select("grouping, budget")
+      .eq("year", parsed.year)
+      .eq("month", parsed.month),
+    supabase
+      .from("savings_accounts")
+      .select("id, name, created_at")
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("savings_month_values")
+      .select("account_id, budget, actual, current_value")
+      .eq("year", parsed.year)
+      .eq("month", parsed.month),
+    supabase
+      .from("investment_accounts")
+      .select("id, name, created_at")
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("investment_month_values")
+      .select("account_id, budget, actual, current_value")
+      .eq("year", parsed.year)
+      .eq("month", parsed.month),
+  ]);
+
+  if (txResult.error) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-16">
-        <p className="text-red-700">Could not load spending: {error.message}</p>
+        <p className="text-red-700">Could not load spending: {txResult.error.message}</p>
         <p className="mt-2 text-sm text-muted">
           Check that Supabase env vars are set and the migration has been run.
         </p>
@@ -45,24 +94,41 @@ export default async function MonthPage({ params }: PageProps) {
     );
   }
 
-  const transactions = (data ?? []).map((row) => ({
+  const transactions = (txResult.data ?? []).map((row) => ({
     ...row,
     amount: Number(row.amount),
     grouping: row.grouping as SpendingGrouping,
     type: row.type as SpendingType,
   })) as Transaction[];
 
+  const plan = planResult.data ? toMonthPlan(planResult.data) : null;
+  const groupingBudgets = toGroupingBudgets(budgetsResult.data ?? []);
+  const savings = mergeFundAccounts(
+    savingsAccountsResult.data ?? [],
+    savingsValuesResult.data ?? [],
+  );
+  const investments = mergeFundAccounts(
+    investAccountsResult.data ?? [],
+    investValuesResult.data ?? [],
+  );
+
+  const loadWarning =
+    budgetsResult.error?.message ||
+    savingsAccountsResult.error?.message ||
+    savingsValuesResult.error?.message ||
+    investAccountsResult.error?.message ||
+    investValuesResult.error?.message;
+
   const prev = shiftYearMonth(ym, -1);
   const next = shiftYearMonth(ym, 1);
-  const defaultDate =
-    (() => {
-      const today = new Date();
-      const todayYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-      if (todayYm === ym) {
-        return today.toISOString().slice(0, 10);
-      }
-      return bounds.start;
-    })();
+  const defaultDate = (() => {
+    const today = new Date();
+    const todayYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    if (todayYm === ym) {
+      return today.toISOString().slice(0, 10);
+    }
+    return bounds.start;
+  })();
 
   return (
     <div className="relative min-h-full flex-1">
@@ -89,17 +155,60 @@ export default async function MonthPage({ params }: PageProps) {
               </Link>
             </nav>
           </div>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="text-sm text-muted hover:text-foreground"
-            >
-              Sign out
-            </button>
-          </form>
+          <div className="flex items-center gap-3">
+            <MonthSetupButton
+              year={parsed.year}
+              month={parsed.month}
+              initial={plan}
+              groupingBudgets={groupingBudgets}
+            />
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="text-sm text-muted hover:text-foreground"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </header>
 
+        {loadWarning ? (
+          <p className="mt-4 text-sm text-amber-800">
+            Some totals data could not load ({loadWarning}). Run migrations{" "}
+            <code className="font-mono">003_totals_items.sql</code> and{" "}
+            <code className="font-mono">004_global_fund_accounts.sql</code> in
+            Supabase if you have not yet.
+          </p>
+        ) : null}
+
         <section className="mt-8">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">Summary</h2>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <CashSummaryTable
+              plan={plan}
+              transactions={transactions}
+              groupingBudgets={groupingBudgets}
+              savings={savings}
+              investments={investments}
+            />
+            <GroupingSummaryTable transactions={transactions} />
+          </div>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">Totals</h2>
+          <TotalsSection
+            year={parsed.year}
+            month={parsed.month}
+            transactions={transactions}
+            groupingBudgets={groupingBudgets}
+            savings={savings}
+            investments={investments}
+          />
+        </section>
+
+        <section className="mt-10">
           <h2 className="mb-4 text-lg font-semibold tracking-tight">Spending</h2>
           <SpendingTable transactions={transactions} defaultDate={defaultDate} />
         </section>
