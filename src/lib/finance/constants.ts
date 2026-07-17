@@ -135,6 +135,8 @@ export type FundItem = {
   /** Account id (stable across months) */
   id: string;
   name: string;
+  /** Global goal for savings accounts; 0 for investments or when unset */
+  target: number;
   budget: number;
   actual: number;
   current_value: number;
@@ -142,7 +144,7 @@ export type FundItem = {
 };
 
 export function mergeFundAccounts(
-  accounts: { id: string; name: string; created_at: string }[],
+  accounts: { id: string; name: string; created_at: string; target?: number | string }[],
   monthValues: {
     account_id: string;
     budget: number | string;
@@ -166,12 +168,28 @@ export function mergeFundAccounts(
     return {
       id: account.id,
       name: account.name,
+      target: Number(account.target ?? 0),
       budget: values?.budget ?? 0,
       actual: values?.actual ?? 0,
       current_value: values?.current_value ?? 0,
       created_at: account.created_at,
     };
   });
+}
+
+/** Progress toward a savings target; null when no target is set */
+export function fundProgress(
+  current: number,
+  target: number,
+): { percent: number; remaining: number; reached: boolean } | null {
+  if (target <= 0) return null;
+  const percent = (current / target) * 100;
+  const remaining = Math.max(0, target - current);
+  return {
+    percent,
+    remaining,
+    reached: current >= target,
+  };
 }
 
 export function toMonthPlan(row: Record<string, unknown>): MonthPlan {

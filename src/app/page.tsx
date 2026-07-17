@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { signOut } from "@/app/actions";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { MonthLinks, YearNav } from "@/components/year-nav";
@@ -101,6 +102,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </h1>
             <YearNav year={year} />
             <MonthLinks year={year} />
+            <div className="mt-4">
+              <Link
+                href="/savings"
+                className="inline-flex h-10 items-center border border-foreground/15 bg-surface px-3 text-sm font-medium text-foreground hover:border-foreground/30"
+              >
+                Savings goals
+              </Link>
+            </div>
           </div>
           <form action={signOut}>
             <button

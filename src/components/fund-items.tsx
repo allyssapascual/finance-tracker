@@ -89,7 +89,7 @@ function FundForm({
         />
       </label>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <MoneyInput name="budget" label="Budget" defaultValue={initial?.budget} />
         <MoneyInput name="actual" label="Actual" defaultValue={initial?.actual} />
         <MoneyInput
@@ -97,6 +97,13 @@ function FundForm({
           label="Current"
           defaultValue={initial?.current_value}
         />
+        {kind === "savings" ? (
+          <MoneyInput
+            name="target"
+            label="Target"
+            defaultValue={initial?.target}
+          />
+        ) : null}
       </div>
 
       {state && "error" in state ? (
@@ -156,8 +163,10 @@ export function FundItemsTable({
         <div>
           <h3 className="text-base font-semibold tracking-tight">{title}</h3>
           <p className="mt-1 text-xs text-muted">
-            Names apply to every month. Budget, actual, and current value are for
-            this month only. Delete removes the account from all months.
+            Names
+            {kind === "savings" ? " and targets" : ""} apply to every month.
+            Budget, actual, and current value are for this month only. Delete
+            removes the account from all months.
           </p>
         </div>
         <button

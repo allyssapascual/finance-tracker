@@ -226,11 +226,27 @@ export async function createFundItem(
   }
 
   const supabase = await createClient();
-  const { data: account, error: accountError } = await supabase
-    .from(accountTable(kind))
-    .insert({ name })
-    .select("id")
-    .single();
+
+  let account: { id: string } | null = null;
+  let accountError: { message: string } | null = null;
+
+  if (kind === "savings") {
+    const result = await supabase
+      .from("savings_accounts")
+      .insert({ name, target: parseMoney(formData.get("target")) })
+      .select("id")
+      .single();
+    account = result.data;
+    accountError = result.error;
+  } else {
+    const result = await supabase
+      .from("investment_accounts")
+      .insert({ name })
+      .select("id")
+      .single();
+    account = result.data;
+    accountError = result.error;
+  }
 
   if (accountError || !account) {
     return { error: accountError?.message ?? "Could not create account." };
@@ -250,6 +266,7 @@ export async function createFundItem(
   }
 
   revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  revalidatePath("/savings");
   return { success: true };
 }
 
@@ -275,10 +292,16 @@ export async function updateFundItem(
 
   const supabase = await createClient();
 
-  const { error: nameError } = await supabase
-    .from(accountTable(kind))
-    .update({ name })
-    .eq("id", id);
+  const { error: nameError } =
+    kind === "savings"
+      ? await supabase
+          .from("savings_accounts")
+          .update({ name, target: parseMoney(formData.get("target")) })
+          .eq("id", id)
+      : await supabase
+          .from("investment_accounts")
+          .update({ name })
+          .eq("id", id);
 
   if (nameError) {
     return { error: nameError.message };
@@ -301,6 +324,7 @@ export async function updateFundItem(
   }
 
   revalidatePath(`/months/${formatYearMonth(year, month)}`);
+  revalidatePath("/savings");
   return { success: true };
 }
 
@@ -320,6 +344,7 @@ export async function deleteFundItem(formData: FormData): Promise<void> {
   if (Number.isInteger(year) && Number.isInteger(month)) {
     revalidatePath(`/months/${formatYearMonth(year, month)}`);
   }
+  revalidatePath("/savings");
 }
 
 export async function createRecurringTemplate(

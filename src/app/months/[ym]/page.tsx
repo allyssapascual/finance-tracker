@@ -69,7 +69,7 @@ export default async function MonthPage({ params }: PageProps) {
       .eq("month", parsed.month),
     supabase
       .from("savings_accounts")
-      .select("id, name, created_at")
+      .select("id, name, created_at, target")
       .order("created_at", { ascending: true }),
     supabase
       .from("savings_month_values")
@@ -157,6 +157,12 @@ export default async function MonthPage({ params }: PageProps) {
               className="inline-flex h-10 items-center border border-foreground/15 bg-surface px-3 text-sm font-medium text-foreground hover:border-foreground/30"
             >
               Overview
+            </Link>
+            <Link
+              href="/savings"
+              className="inline-flex h-10 items-center border border-foreground/15 bg-surface px-3 text-sm font-medium text-foreground hover:border-foreground/30"
+            >
+              Savings goals
             </Link>
             <MonthSetupButton
               year={parsed.year}
