@@ -102,9 +102,9 @@ export default async function SavingsGoalsPage() {
 
         <section className="mt-8">
           <p className="mb-4 text-sm text-muted">
-            Each account&apos;s target is set when you add or edit a saving in
-            monthly Totals. Progress compares this month&apos;s current value to
-            that target.
+            Each account&apos;s target is set when you add or edit a saving under
+            Funds & recurring in a monthly view. Progress compares this
+            month&apos;s current value to that target.
           </p>
           <SavingsProgressList items={items} />
         </section>

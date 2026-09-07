@@ -25,7 +25,7 @@ function dashOrMoney(value: number | null): string {
 
 function GroupingBudgetBars({ rows }: { rows: SpendingTotalsRow[] }) {
   return (
-    <ul className="mb-6 space-y-5">
+    <ul className="mb-6 space-y-4">
       {rows.map((row) => {
         const over =
           row.percentUsed !== null && row.percentUsed > 100;
@@ -37,10 +37,8 @@ function GroupingBudgetBars({ rows }: { rows: SpendingTotalsRow[] }) {
 
         return (
           <li key={row.key}>
-            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <span className="text-sm font-medium sm:text-base">
-                {row.label}
-              </span>
+            <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <span className="text-sm font-medium">{row.label}</span>
               <span className="text-sm tabular-nums text-muted">
                 {formatGbp(row.actual)} / {formatGbp(row.budget)}
                 {row.percentUsed !== null ? (
@@ -58,7 +56,7 @@ function GroupingBudgetBars({ rows }: { rows: SpendingTotalsRow[] }) {
               </span>
             </div>
             <div
-              className="h-5 w-full overflow-hidden bg-accent-soft"
+              className="h-3.5 w-full overflow-hidden bg-accent-soft"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={100}
@@ -118,7 +116,7 @@ export function CashSummaryTable({
       {allZero ? (
         <p className="mb-3 text-sm text-muted">
           Set income and grouping budgets in Setup month. Add savings and
-          investments in Totals.
+          investments in Funds & recurring.
         </p>
       ) : null}
       <p className="mb-3 text-xs text-muted">
@@ -245,16 +243,14 @@ export function SpendingTotalsTable({
   );
 }
 
-export function TotalsSection({
-  year,
-  month,
+export function SummaryTotalsSection({
+  plan,
   transactions,
   groupingBudgets,
   savings,
   investments,
 }: {
-  year: number;
-  month: number;
+  plan: MonthPlan | null;
   transactions: Transaction[];
   groupingBudgets: GroupingBudgetMap;
   savings: FundItem[];
@@ -262,10 +258,37 @@ export function TotalsSection({
 }) {
   return (
     <div className="flex flex-col gap-10">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CashSummaryTable
+          plan={plan}
+          transactions={transactions}
+          groupingBudgets={groupingBudgets}
+          savings={savings}
+          investments={investments}
+        />
+        <GroupingSummaryTable transactions={transactions} />
+      </div>
       <SpendingTotalsTable
         transactions={transactions}
         groupingBudgets={groupingBudgets}
       />
+    </div>
+  );
+}
+
+export function FundsSection({
+  year,
+  month,
+  savings,
+  investments,
+}: {
+  year: number;
+  month: number;
+  savings: FundItem[];
+  investments: FundItem[];
+}) {
+  return (
+    <div className="flex flex-col gap-10">
       <FundItemsTable
         kind="savings"
         title="Savings"

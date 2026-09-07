@@ -84,8 +84,8 @@ export function MonthSetupForm({
           Spending budgets by grouping
         </h3>
         <p className="mb-3 text-xs text-muted">
-          Used in Totals for budget vs actual %. Overall expense budget is the sum
-          of these.
+          Used in Summary & totals for budget vs actual %. Overall expense budget
+          is the sum of these.
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {SPENDING_GROUPINGS.map((g) => (
@@ -100,7 +100,7 @@ export function MonthSetupForm({
       </section>
 
       <p className="text-xs text-muted">
-        Manage individual savings and investments in the Totals section below.
+        Manage individual savings and investments under Funds & recurring.
       </p>
 
       {state && "error" in state ? (

@@ -41,8 +41,8 @@ export function SavingsProgressList({ items }: { items: FundItem[] }) {
   if (items.length === 0) {
     return (
       <p className="text-sm text-muted">
-        No savings accounts yet. Open a monthly view, go to Totals, and add a
-        saving with a target.
+        No savings accounts yet. Open a monthly view, go to Funds & recurring,
+        and add a saving with a target.
       </p>
     );
   }

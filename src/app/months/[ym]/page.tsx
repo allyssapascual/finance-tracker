@@ -3,13 +3,13 @@ import { notFound } from "next/navigation";
 import { signOut } from "@/app/actions";
 import { MonthNav } from "@/components/month-nav";
 import { MonthSetupButton } from "@/components/month-setup";
+import { MonthTabsNav, parseMonthTab } from "@/components/month-tabs";
 import { ShoppingBudgetBanner } from "@/components/budget-banners";
 import { RecurringSection } from "@/components/recurring";
 import { SpendingTable } from "@/components/spending-table";
 import {
-  CashSummaryTable,
-  GroupingSummaryTable,
-  TotalsSection,
+  FundsSection,
+  SummaryTotalsSection,
 } from "@/components/summary-tables";
 import {
   isSisterCard,
@@ -29,10 +29,13 @@ import { createClient } from "@/lib/supabase/server";
 
 type PageProps = {
   params: Promise<{ ym: string }>;
+  searchParams: Promise<{ tab?: string }>;
 };
 
-export default async function MonthPage({ params }: PageProps) {
+export default async function MonthPage({ params, searchParams }: PageProps) {
   const { ym } = await params;
+  const { tab: tabParam } = await searchParams;
+  const tab = parseMonthTab(tabParam);
   const parsed = parseYearMonth(ym);
   if (!parsed) notFound();
 
@@ -225,52 +228,52 @@ export default async function MonthPage({ params }: PageProps) {
           </p>
         ) : null}
 
-        <section className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Summary</h2>
-          <ShoppingBudgetBanner
-            transactions={transactions}
-            groupingBudgets={groupingBudgets}
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <CashSummaryTable
+        <MonthTabsNav ym={ym} active={tab} />
+
+        {tab === "log" ? (
+          <section className="mt-8">
+            <ShoppingBudgetBanner
+              transactions={transactions}
+              groupingBudgets={groupingBudgets}
+            />
+            <SpendingTable
+              transactions={transactions}
+              defaultDate={defaultDate}
+            />
+          </section>
+        ) : null}
+
+        {tab === "summary" ? (
+          <section className="mt-8">
+            <ShoppingBudgetBanner
+              transactions={transactions}
+              groupingBudgets={groupingBudgets}
+            />
+            <SummaryTotalsSection
               plan={plan}
               transactions={transactions}
               groupingBudgets={groupingBudgets}
               savings={savings}
               investments={investments}
             />
-            <GroupingSummaryTable transactions={transactions} />
-          </div>
-        </section>
+          </section>
+        ) : null}
 
-        <section className="mt-10">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Totals</h2>
-          <TotalsSection
-            year={parsed.year}
-            month={parsed.month}
-            transactions={transactions}
-            groupingBudgets={groupingBudgets}
-            savings={savings}
-            investments={investments}
-          />
-        </section>
-
-        <section className="mt-10">
-          <RecurringSection
-            year={parsed.year}
-            month={parsed.month}
-            templates={recurringTemplates}
-          />
-        </section>
-
-        <section className="mt-10">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Spending</h2>
-          <ShoppingBudgetBanner
-            transactions={transactions}
-            groupingBudgets={groupingBudgets}
-          />
-          <SpendingTable transactions={transactions} defaultDate={defaultDate} />
-        </section>
+        {tab === "funds" ? (
+          <section className="mt-8 flex flex-col gap-10">
+            <FundsSection
+              year={parsed.year}
+              month={parsed.month}
+              savings={savings}
+              investments={investments}
+            />
+            <RecurringSection
+              year={parsed.year}
+              month={parsed.month}
+              templates={recurringTemplates}
+            />
+          </section>
+        ) : null}
       </div>
     </div>
   );
