@@ -3,6 +3,7 @@ import {
   buildCashSummary,
   buildGroupingSummary,
   buildSpendingTotalsRows,
+  type SpendingTotalsRow,
 } from "@/lib/finance/aggregates";
 import {
   formatGbp,
@@ -20,6 +21,71 @@ import {
 function dashOrMoney(value: number | null): string {
   if (value === null) return "—";
   return formatGbp(value);
+}
+
+function GroupingBudgetBars({ rows }: { rows: SpendingTotalsRow[] }) {
+  return (
+    <ul className="mb-6 space-y-5">
+      {rows.map((row) => {
+        const over =
+          row.percentUsed !== null && row.percentUsed > 100;
+        const barWidth =
+          row.percentUsed === null
+            ? 0
+            : Math.min(100, Math.max(0, row.percentUsed));
+        const fillClass = over ? "bg-red-600" : "bg-accent";
+
+        return (
+          <li key={row.key}>
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <span className="text-sm font-medium sm:text-base">
+                {row.label}
+              </span>
+              <span className="text-sm tabular-nums text-muted">
+                {formatGbp(row.actual)} / {formatGbp(row.budget)}
+                {row.percentUsed !== null ? (
+                  <>
+                    {" · "}
+                    <span
+                      className={
+                        over ? "font-medium text-red-700" : "text-foreground"
+                      }
+                    >
+                      {formatPercent(row.percentUsed)}
+                    </span>
+                  </>
+                ) : null}
+              </span>
+            </div>
+            <div
+              className="h-5 w-full overflow-hidden bg-accent-soft"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={
+                row.percentUsed === null
+                  ? undefined
+                  : Math.round(Math.min(100, row.percentUsed))
+              }
+              aria-label={`${row.label} budget used`}
+            >
+              <div
+                className={`h-full ${fillClass}`}
+                style={{ width: `${barWidth}%` }}
+              />
+            </div>
+            {row.budget <= 0 ? (
+              <p className="mt-1.5 text-xs text-muted">No budget set</p>
+            ) : over ? (
+              <p className="mt-1.5 text-xs font-medium text-red-700">
+                {formatGbp(row.actual - row.budget)} over budget
+              </p>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function CashSummaryTable({
@@ -129,10 +195,11 @@ export function SpendingTotalsTable({
       <h3 className="mb-3 text-base font-semibold tracking-tight">
         Spending by grouping
       </h3>
-      <p className="mb-3 text-sm text-muted">
+      <p className="mb-4 text-sm text-muted">
         Actual is from your spending entries. Budget comes from Setup month. % is
         how much of the budget you have used.
       </p>
+      <GroupingBudgetBars rows={rows} />
       <div className="table-scroll border border-foreground/10 bg-white/70">
         <table className="min-w-[28rem] text-left text-sm sm:min-w-full">
           <thead className="border-b border-foreground/10 bg-accent-soft/40 text-xs tracking-wide text-muted uppercase">
