@@ -86,6 +86,20 @@ function GroupingBudgetBars({ rows }: { rows: SpendingTotalsRow[] }) {
   );
 }
 
+export function ShoppingBudgetBar({
+  transactions,
+  groupingBudgets,
+}: {
+  transactions: Transaction[];
+  groupingBudgets: GroupingBudgetMap;
+}) {
+  const shopping = buildSpendingTotalsRows(transactions, groupingBudgets).filter(
+    (row) => row.key === "shopping",
+  );
+  if (shopping.length === 0) return null;
+  return <GroupingBudgetBars rows={shopping} />;
+}
+
 export function CashSummaryTable({
   plan,
   transactions,

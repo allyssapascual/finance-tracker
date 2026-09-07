@@ -9,6 +9,7 @@ import { RecurringSection } from "@/components/recurring";
 import { SpendingTable } from "@/components/spending-table";
 import {
   FundsSection,
+  ShoppingBudgetBar,
   SummaryTotalsSection,
 } from "@/components/summary-tables";
 import {
@@ -233,6 +234,10 @@ export default async function MonthPage({ params, searchParams }: PageProps) {
         {tab === "log" ? (
           <section className="mt-8">
             <ShoppingBudgetBanner
+              transactions={transactions}
+              groupingBudgets={groupingBudgets}
+            />
+            <ShoppingBudgetBar
               transactions={transactions}
               groupingBudgets={groupingBudgets}
             />
