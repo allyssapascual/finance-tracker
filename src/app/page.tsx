@@ -7,6 +7,7 @@ import {
   buildYearOverview,
   toYearTransactions,
 } from "@/lib/finance/year-overview";
+import { seedRemainingMonthSetups } from "@/lib/finance/seed-month-setups";
 import { createClient } from "@/lib/supabase/server";
 
 type PageProps = {
@@ -21,6 +22,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     Number.isInteger(parsedYear) && parsedYear >= 2000 && parsedYear <= 2100
       ? parsedYear
       : thisYear;
+
+  await seedRemainingMonthSetups(year);
 
   const supabase = await createClient();
   const yearStart = `${year}-01-01`;

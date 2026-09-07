@@ -190,6 +190,24 @@ export const EMPTY_GROUPING_BUDGETS: GroupingBudgetMap = {
   housing: 0,
 };
 
+/** Default income + grouping budgets for newly seeded month setups */
+export const DEFAULT_MONTH_INCOME = 2837.4;
+
+export const DEFAULT_GROUPING_BUDGETS: GroupingBudgetMap = {
+  bills: 130,
+  transport: 430,
+  shopping: 200,
+  tithes: 380,
+  housing: 500,
+};
+
+export function defaultExpenseBudget(): number {
+  return SPENDING_GROUPINGS.reduce(
+    (sum, g) => sum + DEFAULT_GROUPING_BUDGETS[g],
+    0,
+  );
+}
+
 export type FundItem = {
   /** Account id (stable across months) */
   id: string;

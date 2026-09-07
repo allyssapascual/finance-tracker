@@ -26,6 +26,7 @@ import {
   type SpendingType,
   type Transaction,
 } from "@/lib/finance/constants";
+import { seedRemainingMonthSetups } from "@/lib/finance/seed-month-setups";
 import { createClient } from "@/lib/supabase/server";
 
 type PageProps = {
@@ -39,6 +40,8 @@ export default async function MonthPage({ params, searchParams }: PageProps) {
   const tab = parseMonthTab(tabParam);
   const parsed = parseYearMonth(ym);
   if (!parsed) notFound();
+
+  await seedRemainingMonthSetups(parsed.year);
 
   const bounds = monthDateBounds(ym);
   if (!bounds) notFound();

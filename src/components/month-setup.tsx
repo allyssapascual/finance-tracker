@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { upsertMonthPlan, type ActionResult } from "@/app/actions";
 import {
+  DEFAULT_GROUPING_BUDGETS,
+  DEFAULT_MONTH_INCOME,
   EMPTY_GROUPING_BUDGETS,
   EMPTY_MONTH_PLAN,
   GROUPING_LABELS,
@@ -57,8 +59,16 @@ export function MonthSetupForm({
     upsertMonthPlan,
     null,
   );
-  const p = initial ?? { ...EMPTY_MONTH_PLAN, id: "", year, month };
-  const budgets = { ...EMPTY_GROUPING_BUDGETS, ...groupingBudgets };
+  const p = initial ?? {
+    ...EMPTY_MONTH_PLAN,
+    income: DEFAULT_MONTH_INCOME,
+    id: "",
+    year,
+    month,
+  };
+  const budgets = initial
+    ? { ...EMPTY_GROUPING_BUDGETS, ...groupingBudgets }
+    : { ...DEFAULT_GROUPING_BUDGETS, ...groupingBudgets };
 
   useEffect(() => {
     if (state && "success" in state) {
